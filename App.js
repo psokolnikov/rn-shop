@@ -3,10 +3,13 @@ import { createStore, combineReducers } from 'redux';
 import { Provider } from 'react-redux';
 import AppLoading from 'expo-app-loading';
 import * as Font from 'expo-font';
+import { enableScreens } from 'react-native-screens'
 
 import productsReducer from './store/reducers/products';
 import cartReducer from './store/reducers/cart';
 import ShopNavigator from './navigation/ShopNavigator';
+
+enableScreens();
 
 const rootReducer = combineReducers({
 	products: productsReducer,
