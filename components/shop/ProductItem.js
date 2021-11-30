@@ -8,13 +8,13 @@ import {
   TouchableOpacity,
   TouchableNativeFeedback,
   Platform,
-} from "react-native";
-import Colors from "../../constants/Colors";
+} from 'react-native';
+import Colors from '../../constants/Colors';
 
 const ProductItem = (props) => {
   let TouchableComponent = TouchableOpacity;
 
-  if (Platform.OS === "android" && Platform.Version >= 21) {
+  if (Platform.OS === 'android' && Platform.Version >= 21) {
     TouchableComponent = TouchableNativeFeedback;
   }
 
@@ -33,12 +33,12 @@ const ProductItem = (props) => {
             <View style={styles.actions}>
               <Button
                 color={Colors.primary}
-                title="View Details"
+                title='View Details'
                 onPress={props.onViewDetail}
               />
               <Button
                 color={Colors.primary}
-                title="To Cart"
+                title='To Cart'
                 onPress={props.onAddToCart}
               />
             </View>
@@ -51,13 +51,13 @@ const ProductItem = (props) => {
 
 const styles = StyleSheet.create({
   product: {
-    shadowColor: "black", // Shadow works for iOS only
+    shadowColor: 'black', // Shadow works for iOS only
     shadowOpacity: 0.26,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 8,
     elevation: 5, // Elevation works for Android only
     borderRadius: 10,
-    backgroundColor: "white",
+    backgroundColor: 'white',
     height: 300,
     margin: 20,
   },
