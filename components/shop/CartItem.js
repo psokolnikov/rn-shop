@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
-
 const CartItem = props => {
     return <View style={styles.cartItem}>
         <View style={styles.itemData}>
