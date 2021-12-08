@@ -35,17 +35,22 @@ const OrdersScreen = (props) => {
 	}, [dispatch, setIsRefreshing, setError]);
 
 	useEffect(() => {
-		const willFocusSub = props.navigation.addListener('willFocus', loadOrders);
+		const unsubscribe = props.navigation.addListener(
+			'focus',
+			loadOrders
+		);
 
 		return () => {
-			willFocusSub.remove();
+			unsubscribe();
 		};
 	}, [loadOrders]);
 
 	useEffect(() => {
 		setIsLoading(true);
-		loadOrders();
-		setIsLoading(false);
+		loadOrders().then(() => {
+			setIsLoading(false);
+		})
+
 	}, [dispatch, loadOrders]);
 
 	if (error) {
@@ -91,7 +96,7 @@ const OrdersScreen = (props) => {
 	);
 };
 
-OrdersScreen.navigationOptions = (navData) => {
+export const screenOptions = (navData) => {
 	return {
 		headerTitle: 'Your Orders',
 		headerLeft: () => (
