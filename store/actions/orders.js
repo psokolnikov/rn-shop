@@ -4,8 +4,8 @@ export const ADD_ORDER = 'ADD_ORDER';
 export const SET_ORDERS = 'SET_ORDERS';
 
 export const fetchOrders = () => {
-    return async (dispatch, getState) => {
-        const userId = getState().auth.userId; 
+	return async (dispatch, getState) => {
+		const userId = getState().auth.userId;
 		try {
 			const response = await fetch(
 				`https://rn-complete-guide-37303-default-rtdb.europe-west1.firebasedatabase.app/orders/${userId}.json`,
@@ -14,9 +14,9 @@ export const fetchOrders = () => {
 				}
 			);
 
-            if (!response.ok) {
-                throw new Error('Something went wrong!')
-            }
+			if (!response.ok) {
+				throw new Error('Something went wrong!');
+			}
 
 			const responseData = await response.json();
 
@@ -28,7 +28,7 @@ export const fetchOrders = () => {
 						key,
 						responseData[key].cartItems,
 						responseData[key].totalAmount,
-						new Date(responseData[key].date),
+						new Date(responseData[key].date)
 					)
 				);
 			}
@@ -37,18 +37,18 @@ export const fetchOrders = () => {
 				type: SET_ORDERS,
 				orders: loadedOrders,
 			});
-		} catch(error) {
-            // send to custom analytics server
-            throw error;
-        }
+		} catch (error) {
+			// send to custom analytics server
+			throw error;
+		}
 	};
 };
 
 export const addOrder = (cartItems, totalAmount) => {
-    return async (dispatch, getState) => {
-        const token = getState().auth.token; 
-        const userId = getState().auth.userId; 
-        const date = new Date();
+	return async (dispatch, getState) => {
+		const token = getState().auth.token;
+		const userId = getState().auth.userId;
+		const date = new Date();
 		const response = await fetch(
 			`https://rn-complete-guide-37303-default-rtdb.europe-west1.firebasedatabase.app/orders/${userId}.json?auth=${token}`,
 			{
@@ -58,22 +58,47 @@ export const addOrder = (cartItems, totalAmount) => {
 				},
 				body: JSON.stringify({
 					cartItems,
-                    totalAmount,
-                    date: date.toISOString()
+					totalAmount,
+					date: date.toISOString(),
 				}),
 			}
 		);
 
-        if (!response.ok) {
-            throw new Error('Something went wrong!')
-        }
+		if (!response.ok) {
+			throw new Error('Something went wrong!');
+		}
 
 		const responseData = await response.json();
 
-        dispatch({
-            type: ADD_ORDER,
-            orderData: { id: responseData.name, items: cartItems, amount: totalAmount, date: date }
-        });
+		dispatch({
+			type: ADD_ORDER,
+			orderData: {
+				id: responseData.name,
+				items: cartItems,
+				amount: totalAmount,
+				date: date,
+			},
+		});
 
-    }
-}
+		for (const cartItem of cartItems) {
+			const expoPushToken = cartItem.ownerPushToken;
+
+			const message = {
+				to: expoPushToken,
+				sound: 'default',
+				title: 'New Order',
+				body: cartItem.productTitle,
+			};
+
+			await fetch('https://exp.host/--/api/v2/push/send', {
+				method: 'POST',
+				headers: {
+					Accept: 'application/json',
+					'Accept-encoding': 'gzip, deflate',
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(message),
+			});
+		}
+	};
+};

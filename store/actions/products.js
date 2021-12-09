@@ -1,3 +1,6 @@
+import Constants from 'expo-constants';
+import * as Notifications from 'expo-notifications';
+
 import Product from '../../models/product';
 
 export const CREATE_PRODUCT = 'CREATE_PRODUCT';
@@ -6,8 +9,8 @@ export const DELETE_PRODUCT = 'DELETE_PRODUCT';
 export const SET_PRODUCTS = 'SET_PRODUCTS';
 
 export const fetchProducts = () => {
-    return async (dispatch, getState) => {
-        const userId = getState().auth.userId; 
+	return async (dispatch, getState) => {
+		const userId = getState().auth.userId;
 		try {
 			const response = await fetch(
 				'https://rn-complete-guide-37303-default-rtdb.europe-west1.firebasedatabase.app/products.json',
@@ -16,9 +19,9 @@ export const fetchProducts = () => {
 				}
 			);
 
-            if (!response.ok) {
-                throw new Error('Something went wrong!')
-            }
+			if (!response.ok) {
+				throw new Error('Something went wrong!');
+			}
 
 			const responseData = await response.json();
 
@@ -29,6 +32,7 @@ export const fetchProducts = () => {
 					new Product(
 						key,
 						responseData[key].ownerId,
+						responseData[key].ownerPushToken,
 						responseData[key].title,
 						responseData[key].imageUrl,
 						responseData[key].description,
@@ -40,19 +44,51 @@ export const fetchProducts = () => {
 			dispatch({
 				type: SET_PRODUCTS,
 				products: loadedProducts,
-                userProducts: loadedProducts.filter(p => p.ownerId === userId)
+				userProducts: loadedProducts.filter((p) => p.ownerId === userId),
 			});
-		} catch(error) {
-            // send to custom analytics server
-            throw error;
-        }
+		} catch (error) {
+			// send to custom analytics server
+			throw error;
+		}
 	};
 };
 
+async function registerForPushNotificationsAsync() {
+	let token;
+	if (Constants.isDevice) {
+		const { status: existingStatus } =
+			await Notifications.getPermissionsAsync();
+		let finalStatus = existingStatus;
+		if (existingStatus !== 'granted') {
+			const { status } = await Notifications.requestPermissionsAsync();
+			finalStatus = status;
+		}
+		if (finalStatus !== 'granted') {
+			alert('Failed to get push token for push notification!');
+			return;
+		}
+		token = (await Notifications.getExpoPushTokenAsync()).data;
+	} else {
+		alert('Must use physical device for Push Notifications');
+	}
+
+	if (Platform.OS === 'android') {
+		Notifications.setNotificationChannelAsync('default', {
+			name: 'default',
+			importance: Notifications.AndroidImportance.MAX,
+			vibrationPattern: [0, 250, 250, 250],
+			lightColor: '#FF231F7C',
+		});
+	}
+
+	return token;
+}
+
 export const createProduct = (title, description, imageUrl, price) => {
-    return async (dispatch, getState) => {
-        const token = getState().auth.token;
-        const userId = getState().auth.userId; 
+	return async (dispatch, getState) => {
+		const token = getState().auth.token;
+		const userId = getState().auth.userId;
+		const pushToken = await registerForPushNotificationsAsync();
 		const response = await fetch(
 			`https://rn-complete-guide-37303-default-rtdb.europe-west1.firebasedatabase.app/products.json?auth=${token}`,
 			{
@@ -65,14 +101,15 @@ export const createProduct = (title, description, imageUrl, price) => {
 					description,
 					imageUrl,
 					price,
-                    ownerId: userId
+					ownerId: userId,
+					ownerPushToken: pushToken
 				}),
 			}
 		);
 
-        if (!response.ok) {
-            throw new Error('Something went wrong!')
-        }
+		if (!response.ok) {
+			throw new Error('Something went wrong!');
+		}
 
 		const responseData = await response.json();
 
@@ -84,15 +121,16 @@ export const createProduct = (title, description, imageUrl, price) => {
 				description,
 				imageUrl,
 				price,
-                ownerId: userId
+				ownerId: userId,
+				ownerPushToken: pushToken
 			},
 		});
 	};
 };
 
 export const updateProduct = (productId, title, description, imageUrl) => {
-    return async (dispatch, getState) => {
-        const token = getState().auth.token;
+	return async (dispatch, getState) => {
+		const token = getState().auth.token;
 		const response = await fetch(
 			`https://rn-complete-guide-37303-default-rtdb.europe-west1.firebasedatabase.app/products/${productId}.json?auth=${token}`,
 			{
@@ -108,31 +146,31 @@ export const updateProduct = (productId, title, description, imageUrl) => {
 			}
 		);
 
-        if (!response.ok) {
-            throw new Error('Something went wrong!');
-        }
-        
-        dispatch({
-            type: UPDATE_PRODUCT,
-            productData: { productId, title, description, imageUrl },
-        });
-    }
+		if (!response.ok) {
+			throw new Error('Something went wrong!');
+		}
+
+		dispatch({
+			type: UPDATE_PRODUCT,
+			productData: { productId, title, description, imageUrl },
+		});
+	};
 };
 
 export const deleteProduct = (productId) => {
-    return async (dispatch, getState) => {
-        const token = getState().auth.token;
-        const response = await fetch(
+	return async (dispatch, getState) => {
+		const token = getState().auth.token;
+		const response = await fetch(
 			`https://rn-complete-guide-37303-default-rtdb.europe-west1.firebasedatabase.app/products/${productId}.json?auth=${token}`,
 			{
-				method: 'DELETE'
+				method: 'DELETE',
 			}
-        );
-        
-        if (!response.ok) {
-            throw new Error('Something went wrong!!!');
-        }
+		);
 
-        dispatch({ type: DELETE_PRODUCT, productId });
-    }
+		if (!response.ok) {
+			throw new Error('Something went wrong!!!');
+		}
+
+		dispatch({ type: DELETE_PRODUCT, productId });
+	};
 };

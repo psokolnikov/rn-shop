@@ -5,12 +5,21 @@ import AppLoading from 'expo-app-loading';
 import * as Font from 'expo-font';
 import { enableScreens } from 'react-native-screens';
 import ReduxThunk from 'redux-thunk';
+import * as Notifications from 'expo-notifications';
 
 import productsReducer from './store/reducers/products';
 import cartReducer from './store/reducers/cart';
 import orderReducer from './store/reducers/orders';
 import authReducer from './store/reducers/auth';
 import AppNavigator from './navigation/AppNavigator';
+
+Notifications.setNotificationHandler({
+	handleNotification: async () => ({
+	  shouldShowAlert: true,
+	  shouldPlaySound: true,
+	  shouldSetBadge: true,
+	}),
+  });
 
 enableScreens();
 
