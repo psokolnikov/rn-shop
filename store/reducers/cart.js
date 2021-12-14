@@ -47,6 +47,7 @@ export default (state = initialState, action) => {
 					selectedCartItem.quantity - 1,
 					selectedCartItem.productPrice,
 					selectedCartItem.productTitle,
+					selectedCartItem.pushToken,
 					selectedCartItem.sum - selectedCartItem.productPrice
 				);
 	
